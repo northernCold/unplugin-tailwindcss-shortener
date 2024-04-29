@@ -14,8 +14,8 @@ const cssShortener = new CssShortener();
 const doReplacer: DoReplacer = generateReplacer((className) =>
   cssShortener.shortenClassName(className)
 );
-export async function genCSSMap() {
-  const files = await fg(["**/*.{jsx,tsx,vue,html,ts,js}", "!node_modules"]);
+export function genCSSMap() {
+  const files = fg.sync(["**/*.{jsx,tsx,vue,html,ts,js}", "!node_modules"]);
   for (let file of files) {
     try {
       const ext = path.extname(file);

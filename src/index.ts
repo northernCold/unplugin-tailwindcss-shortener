@@ -70,8 +70,8 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
   return {
     name: "unplugin-tailwindcss-shortener",
     enforce: "pre",
-    async buildStart() {
-      const cssMap = await genCSSMap();
+    buildStart() {
+      const cssMap = genCSSMap();
       const tailwindConfig =
         options.tailwindConfig ??
         path.resolve(process.cwd(), "./tailwind.config.js");
