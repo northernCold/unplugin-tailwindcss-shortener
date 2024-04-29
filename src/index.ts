@@ -24,6 +24,7 @@ type UserOptions = {
    */
   exclude?: string[];
   tailwindConfig?: string;
+  tailwindCSS?: string;
   cwd?: string;
   /**
    * @default 'build'
@@ -37,7 +38,10 @@ type UserOptions = {
 };
 
 function generateFile(code: string, filename: string) {
-  const filepath = path.resolve(process.cwd(), `./.tailwindcss-shortener/${filename}`);
+  const filepath = path.resolve(
+    process.cwd(),
+    `./.tailwindcss-shortener/${filename}`
+  );
   fs.mkdirSync(path.dirname(filepath), { recursive: true });
   fs.writeFileSync(filepath, code);
 }
@@ -71,16 +75,19 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       const tailwindConfig =
         options.tailwindConfig ??
         path.resolve(process.cwd(), "./tailwind.config.js");
+      const input =
+        options.tailwindCSS ??
+        path.resolve(process.cwd(), "./src/tailwind.css");
 
       const tailwindCodeUint8Array = execSync(
-        `npx tailwindcss -c ${tailwindConfig}`
+        `npx tailwindcss -c ${tailwindConfig} -i ${input}`
       );
       const textDecoder = new TextDecoder("utf-8");
       const tailwindCode = textDecoder.decode(tailwindCodeUint8Array);
 
       if (options.output) {
-        generateFile(tailwindCode, 'tailwind.css');
-        generateFile(JSON.stringify(cssMap, null, 2), 'cssMap.json'); 
+        generateFile(tailwindCode, "tailwind.css");
+        generateFile(JSON.stringify(cssMap, null, 2), "cssMap.json");
       }
 
       const [_tailwindTransformedCode, usedSet] = cssReplacer(
