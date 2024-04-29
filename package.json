@@ -3,15 +3,15 @@
   "type": "module",
   "version": "0.1.0",
   "packageManager": "pnpm@9.0.6",
-  "description": "",
+  "description": "Shorten the classes of Tailwind CSS",
   "license": "MIT",
-  "homepage": "https://github.com/antfu/unplugin-starter#readme",
+  "homepage": "https://github.com/northernCold/unplugin-tailwindcss-shortener#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/unplugin-starter.git"
+    "url": "git+https://github.com/northernCold/unplugin-tailwindcss-shortener.git"
   },
   "bugs": {
-    "url": "https://github.com/antfu/unplugin-starter/issues"
+    "url": "https://github.com/northernCold/unplugin-tailwindcss-shortener"
   },
   "keywords": [
     "unplugin",
