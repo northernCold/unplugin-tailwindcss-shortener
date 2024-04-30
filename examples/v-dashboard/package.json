@@ -4,7 +4,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "build:before": "vue-tsc --noEmit && cross-env USED=false vite build",
+    "build:after": "vue-tsc --noEmit && cross-env USED=true vite build",
     "serve": "vite preview",
+    "serve:before": "vite preview --port=6173 --outDir=dist-before",
+    "serve:after": "vite preview --port=7173 --outDir=dist-after",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

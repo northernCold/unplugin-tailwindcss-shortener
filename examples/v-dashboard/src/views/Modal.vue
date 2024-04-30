@@ -94,6 +94,5 @@ const open = ref(false);
 
 <style>
 .modal {
-  transition: opacity 0.25s ease;
 }
 </style>

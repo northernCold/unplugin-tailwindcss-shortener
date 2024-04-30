@@ -1,10 +1,10 @@
-<script>
-export default {
-  name: 'HelloWorld1',
-  props: {
-    msg: String,
+<script setup>
+defineProps({
+  msg: {
+    type: String,
+    required: true,
   },
-}
+})
 </script>
 
 <template>
