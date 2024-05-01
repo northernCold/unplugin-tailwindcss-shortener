@@ -54,13 +54,7 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
     (v: string) => tailwindcssMap[v] ?? v
   );
   const filter = createFilter(
-    options.include || [
-      /\.vue$/,
-      /\.vue\?vue/,
-      /\.vue\?v=/,
-      /\.[jt]sx?$/,
-      /tailwind.css$/,
-    ],
+    options.include || [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/],
     options.exclude || [
       /[\\/]node_modules[\\/]/,
       /[\\/]\.git[\\/]/,
@@ -102,17 +96,15 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       });
     },
     loadInclude(id: string) {
-      if (options.apply === "serve") {
-        return false;
-      }
-      const file = cleanUrl(id);
-      return filter(file);
+      if (id.includes("?")) return false;
+      return filter(id);
     },
-    load(id) {
-      const file = cleanUrl(id);
+    load(_id) {
+      // in webpack, there are Vue sub requests. If only the main request is handled, then the code won't be transformed
+      const id = cleanUrl(_id);
       try {
-        if (/.vue$/.test(file)) {
-          const code = fs.readFileSync(file, { encoding: "utf-8" });
+        if (/\.vue$/.test(id)) {
+          const code = fs.readFileSync(id, { encoding: "utf-8" });
           const {
             descriptor: { template, script, scriptSetup, styles },
           } = parse(code);
@@ -168,16 +160,17 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
 
           return transformedCode;
         }
-        if (/.[jt]sx?$/.test(file)) {
-          const code = fs.readFileSync(file, { encoding: "utf-8" });
+        if (/\.[jt]sx?$/.test(id)) {
+          const code = fs.readFileSync(id, { encoding: "utf-8" });
           const transformedCode = jsReplacer(code, doReplacer);
           return transformedCode;
         }
-        if (/tailwind\.css$/.test(file)) {
+        if (/tailwind\.css$/.test(id)) {
           return tailwindTranformedCode;
         }
+        return null;
       } catch (error) {
-        console.error(file);
+        console.error(id);
         console.error(error);
       }
     },
