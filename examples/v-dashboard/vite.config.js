@@ -15,7 +15,7 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    process.env.USED === 'true' &&
+    process.env.USED !== 'false' &&
       tailwindcssShortener({
         tailwindCSS: './src/assets/tailwind.css',
       }),
