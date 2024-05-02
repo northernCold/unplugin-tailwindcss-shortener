@@ -5,7 +5,8 @@ module.exports = defineConfig({
   configureWebpack: {
     plugins: [
       require("../../dist/webpack.cjs").default({
-        output: true
+        output: true,
+        tailwindCSS: './src/global.css'
       }),
     ],
   },
