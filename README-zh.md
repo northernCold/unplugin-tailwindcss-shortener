@@ -2,12 +2,11 @@
 
 [![NPM version](https://img.shields.io/npm/v/unplugin-tailwindcss-shortener?color=a1b858&label=)](https://www.npmjs.com/package/unplugin-tailwindcss-shortener)
 
-[zh-CN](./README-zh.md)
 
-Shorten the classes of Tailwind CSS
+缩短 Tailwind CSS 的类名
 
-- Support Vue and React (TODO)
-- Support Vite、Vue Cli and Webpack
+- 支持 Vue and React (TODO)
+- 支持 Vite、Vue Cli and Webpack
 
 HTML
 ```html
@@ -101,11 +100,11 @@ npm i unplugin-tailwindcss-shortener
 
 ```ts
 // vite.config.ts
-import TailwindcssShortener from 'unplugin-tailwindcss-shortener/vite'
+import Starter from 'unplugin-tailwindcss-shortener/vite'
 
 export default defineConfig({
   plugins: [
-    TailwindcssShortener({ /* options */ }),
+    Starter({ /* options */ }),
   ],
 })
 ```
@@ -194,32 +193,33 @@ build({
 <br></details>
 
 
-## Usage
+## 使用
 
-If your project not only uses static class names but also dynamic class names, you may need to make some adjustments to the code.
+如果项目中不仅使用了静态类名，还用到了动态类名。那么使用动态类名的代码，你可能需要做一些代码调整。
 
-* There are two main rules for dynamic class names:
+* 针对动态类名，有两个主要规则
 
-1. In template, js, jsx files, dynamic class names must be wrapped with cx or cva.
-2. cx, cva (support class-variance-authority) can use tools such as `class-variance-authority`, `classanems`, `clsx`, `tailwind-merge`, etc., for class name concatenation, you can customize one. But the name must be cx or cva.
+1. 在 template、js、jsx 里，动态类名*必须*需要使用 cx、cva 包裹
+2. cx、cva (support class-variance-authority) 可以使用 `class-variance-authority`、`classanems`、`clsx`、`tailwind-merge`等等用来 类名拼接的工具，你可以自定义一个。但是名字必须是 `cx` 或者 `cva`
 
-## Vue
+
+### Vue
 
 1. template
-   1. Static class names in template
+   1. template 静态类名
   
     ```html
     <div class="flex items-center justify-center h-screen px-6 bg-gray-200"></div>
     ```
 
-   2. Dynamic class names in template
-      1. Expressions (*must use cx or cva to wrap)
+   2. template 动态类名
+      1. 表达式 (*必须使用 cx、cva 包裹)
 
       ```html
       <div :class="cx(!open && 'hidden', 'flex items-center justify-center h-screen px-6 bg-gray-200')"></div>
       ```
 
-      2. Variables
+      2. 变量
 
       ```html
       <template>
@@ -231,7 +231,7 @@ If your project not only uses static class names but also dynamic class names, y
       const boxClass = cx(!open && 'hidden', 'flex items-center justify-center h-screen px-6 bg-gray-200')
       </script>
       ```
-      3. Custom component attributes in template are treated as class names
+      3. template 里自定义组件的属性作为类名处理
       ```html
       <template>
         <Select :dropdown-class="boxClass" />
@@ -243,7 +243,7 @@ If your project not only uses static class names but also dynamic class names, y
       </script>
       ```
 
-2. Class names in jsx
+2. jsx 里的类名
    1. cx、cva
    
    ```js
@@ -252,18 +252,18 @@ If your project not only uses static class names but also dynamic class names, y
    export boxClass = cx(!open && 'hidden', 'flex items-center justify-center h-screen px-6 bg-gray-200');
    ```
 
-   2. HTML in js same as 1
+   2. html in js 同 1
 
-3. Class names in js
-   1. Same as 3.1
+3. js 里的类名
+   1. 同 3.1
 
-> Currently does not support in template strings
+> 目前不支持在模板字符串, 
 
 ### React
 
 TODO
 
-## Options
+## 配置项
 
 ```typescript
 type UserOptions = {
@@ -276,10 +276,12 @@ type UserOptions = {
    */
   exclude?: RegExp[];
   /**
+   * tailwind 的配置文件路径
    * @default './tailwind.config.js'
    */
   tailwindConfig?: string;
   /**
+   * Tailwind 的指令文件路径
    * @default './src/tailwind.css'
    */
   tailwindCSS?: string;
@@ -290,10 +292,10 @@ type UserOptions = {
   apply?: "build" | "serve";
   /**
    * @default false
-   * Information for debugging
+   * 用来调试的信息
    * - /.tailwindcss-shortener
-   *  - tailwind.css (The generated CSS file from Tailwind CSS.)
-   *  - cssMap.json (Mapping of original class names to shortened class names)
+   *  - tailwind.css (Tailwind CSS 生成的 CSS 文件)
+   *  - cssMap.json (原类名与短类名映射关系)
    */
   output?: boolean;
 };
