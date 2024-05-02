@@ -76,12 +76,14 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
     enforce: "pre",
     buildStart() {
       const cssMap = genCSSMap();
-      const tailwindConfig =
-        options.tailwindConfig ??
-        path.resolve(process.cwd(), "./tailwind.config.js");
-        tailwindcssInput =
-        options.tailwindCSS ??
-        path.resolve(process.cwd(), "./src/tailwind.css");
+      const tailwindConfig = path.resolve(
+        process.cwd(),
+        options.tailwindConfig ?? "./tailwind.config.js"
+      );
+      tailwindcssInput = path.resolve(
+        process.cwd(),
+        options.tailwindCSS ?? "./src/tailwind.css"
+      );
 
       const tailwindCodeUint8Array = execSync(
         `npx tailwindcss -c ${tailwindConfig} -i ${tailwindcssInput}`
@@ -99,6 +101,11 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       [...usedSet.values()].forEach((key) => {
         tailwindcssMap[key] = cssMap[key];
       });
+
+      if (options.output) {
+        generateFile(tailwindCode, "tailwind.css");
+        generateFile(JSON.stringify(cssMap, null, 2), "cssMap.json");
+      }
     },
     loadInclude(id: string) {
       if (id === tailwindcssInput) return true;
@@ -171,7 +178,10 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
           const transformedCode = jsReplacer(code, doReplacer);
           return transformedCode;
         }
-        if (/tailwind\.css$/.test(id)) {
+        if (tailwindcssInput === id) {
+          if (options.output) {
+            generateFile(tailwindTranformedCode, "transform-tailwind.css");
+          }
           return tailwindTranformedCode;
         }
         return null;
