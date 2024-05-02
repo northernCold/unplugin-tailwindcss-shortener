@@ -16,16 +16,21 @@ import { cleanUrl } from "./core/util";
 
 type UserOptions = {
   /**
-   * @default [/\.vue$/, /\.vue\?vue/, /\.vue\?v=/, /\.[jt]sx?$/]
+   * @default [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/]
    */
-  include?: string[];
+  include?: RegExp[];
   /**
    * @default [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/, /[\\/]\.nuxt[\\/]/]
    */
-  exclude?: string[];
+  exclude?: RegExp[];
+  /**
+   * @default './tailwind.config.js'
+   */
   tailwindConfig?: string;
+  /**
+   * @default './src/tailwind.css'
+   */
   tailwindCSS?: string;
-  cwd?: string;
   /**
    * @default 'build'
    * webpack don't support this
@@ -33,6 +38,10 @@ type UserOptions = {
   apply?: "build" | "serve";
   /**
    * @default false
+   * Information for debugging
+   * - /.tailwindcss-shortener
+   *  - tailwind.css (The generated CSS file from Tailwind CSS.)
+   *  - cssMap.json (Mapping of original class names to shortened class names)
    */
   output?: boolean;
 };
@@ -49,6 +58,7 @@ function generateFile(code: string, filename: string) {
 export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
   let tailwindTranformedCode: string;
   let tailwindcssMap: Record<string, string>;
+  let tailwindcssInput: string;
 
   const doReplacer: DoReplacer = generateReplacer(
     (v: string) => tailwindcssMap[v] ?? v
@@ -69,20 +79,15 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       const tailwindConfig =
         options.tailwindConfig ??
         path.resolve(process.cwd(), "./tailwind.config.js");
-      const input =
+        tailwindcssInput =
         options.tailwindCSS ??
         path.resolve(process.cwd(), "./src/tailwind.css");
 
       const tailwindCodeUint8Array = execSync(
-        `npx tailwindcss -c ${tailwindConfig} -i ${input}`
+        `npx tailwindcss -c ${tailwindConfig} -i ${tailwindcssInput}`
       );
       const textDecoder = new TextDecoder("utf-8");
       const tailwindCode = textDecoder.decode(tailwindCodeUint8Array);
-
-      if (options.output) {
-        generateFile(tailwindCode, "tailwind.css");
-        generateFile(JSON.stringify(cssMap, null, 2), "cssMap.json");
-      }
 
       const [_tailwindTransformedCode, usedSet] = cssReplacer(
         tailwindCode,
@@ -96,6 +101,7 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       });
     },
     loadInclude(id: string) {
+      if (id === tailwindcssInput) return true;
       if (id.includes("?")) return false;
       return filter(id);
     },
