@@ -4,7 +4,9 @@ module.exports = defineConfig({
   transpileDependencies: true,
   configureWebpack: {
     plugins: [
-      require("../../dist/webpack.cjs").default({}),
+      require("../../dist/webpack.cjs").default({
+        output: true
+      }),
     ],
   },
 })
