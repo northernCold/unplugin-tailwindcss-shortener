@@ -28,6 +28,8 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
   let tailwindTranformedCode: string;
   let tailwindcssMap: Record<string, string>;
   let tailwindcssInput: string;
+  let cssMap: Record<string, string>;
+
   if (!options.keyword) {
     options.keyword = { cva: true };
   }
@@ -36,7 +38,7 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
     (v: string) => tailwindcssMap[v] ?? v
   );
   const filter = createFilter(
-    options.include || [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/],
+    options.include || [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/, /^twst:css-map$/],
     options.exclude || [
       /[\\/]node_modules[\\/]/,
       /[\\/]\.git[\\/]/,
@@ -78,6 +80,12 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
         generateFile(tailwindCode, "tailwind.css");
         generateFile(JSON.stringify(cssMap, null, 2), "cssMap.json");
       }
+    },
+    resolveId(id) {
+      if (id === 'twst:css-map') {
+        return id;
+      }
+      return null;
     },
     loadInclude(id: string) {
       if (normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput))
@@ -170,6 +178,9 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
             generateFile(tailwindTranformedCode, "transform-tailwind.css");
           }
           return tailwindTranformedCode;
+        }
+        if (id === 'twst:css-map') {
+          return `export default ${JSON.stringify(cssMap, null, 2)};`;
         }
         return null;
       } catch (error) {
