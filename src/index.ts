@@ -1,5 +1,5 @@
 import type { UnpluginFactory } from "unplugin";
-import type { CSSMap, DoReplacer } from "./types";
+import type { Options, DoReplacer } from "./types";
 import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
@@ -14,37 +14,6 @@ import replacer from "./core/replacer/html-replacer";
 import { createFilter } from "@rollup/pluginutils";
 import { cleanUrl, normalizeAbsolutePath } from "./core/util";
 
-type UserOptions = {
-  /**
-   * @default [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/]
-   */
-  include?: RegExp[];
-  /**
-   * @default [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/, /[\\/]\.nuxt[\\/]/]
-   */
-  exclude?: RegExp[];
-  /**
-   * @default './tailwind.config.js'
-   */
-  tailwindConfig?: string;
-  /**
-   * @default './src/tailwind.css'
-   */
-  tailwindCSS?: string;
-  /**
-   * @default 'build'
-   * webpack don't support this
-   */
-  apply?: "build" | "serve";
-  /**
-   * @default false
-   * Information for debugging
-   * - /.tailwindcss-shortener
-   *  - tailwind.css (The generated CSS file from Tailwind CSS.)
-   *  - cssMap.json (Mapping of original class names to shortened class names)
-   */
-  output?: boolean;
-};
 
 function generateFile(code: string, filename: string) {
   const filepath = path.resolve(
@@ -55,10 +24,13 @@ function generateFile(code: string, filename: string) {
   fs.writeFileSync(filepath, code);
 }
 
-export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
+export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
   let tailwindTranformedCode: string;
   let tailwindcssMap: Record<string, string>;
   let tailwindcssInput: string;
+  if (!options.keyword) {
+    options.keyword = { cva: true };
+  }
 
   const doReplacer: DoReplacer = generateReplacer(
     (v: string) => tailwindcssMap[v] ?? v
@@ -75,7 +47,7 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
     name: "unplugin-tailwindcss-shortener",
     enforce: "pre",
     buildStart() {
-      const cssMap = genCSSMap();
+      const cssMap = genCSSMap(options.keyword);
       const tailwindConfig = path.resolve(
         process.cwd(),
         options.tailwindConfig ?? "./tailwind.config.js"
@@ -139,19 +111,31 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
           let transformedStylesCode;
 
           if (template) {
-            const code = templateReplacer(template.content, doReplacer);
+            const code = templateReplacer(
+              template.content,
+              doReplacer,
+              options.keyword
+            );
             const attriutesStr = stringifyAttrs(template.attrs);
             transformedTemplateCode = `<template ${attriutesStr}>${code}</template>`;
           }
 
           if (script) {
-            const code = jsReplacer(script.content, doReplacer);
+            const code = jsReplacer(
+              script.content,
+              doReplacer,
+              options.keyword
+            );
             const attriutesStr = stringifyAttrs(script.attrs);
             transformedScriptCode = `<script ${attriutesStr}>${code}</script>`;
           }
 
           if (scriptSetup) {
-            const code = jsReplacer(scriptSetup.content, doReplacer);
+            const code = jsReplacer(
+              scriptSetup.content,
+              doReplacer,
+              options.keyword
+            );
             const attriutesStr = stringifyAttrs(scriptSetup.attrs);
             transformedScriptSetupCode = `<script ${attriutesStr}>${code}</script>`;
           }
@@ -176,7 +160,7 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
         }
         if (/\.[jt]sx?$/.test(id)) {
           const code = fs.readFileSync(id, { encoding: "utf-8" });
-          const transformedCode = jsReplacer(code, doReplacer);
+          const transformedCode = jsReplacer(code, doReplacer, options.keyword);
           return transformedCode;
         }
         if (

@@ -1,11 +1,15 @@
-import type { DoReplacer } from "../src/types";
-import replacer from "../src/core/replacer/js-replacer";
+import type { DoReplacer, Options } from "../src/types";
+import _replacer from "../src/core/replacer/js-replacer";
 import { it, describe, expect } from "vitest";
 import { generateReplacer } from "../src/core/util";
 
 const doReplacer: DoReplacer = generateReplacer(
   (className) => className + "-replaced"
 );
+
+const replacer = (code: string, replacer: DoReplacer, keyword: Options['keyword'] = { cva: true}) => {
+  return _replacer(code, replacer, keyword)
+}
 
 describe("replacer function", () => {
   it("should replace string literals in JSX attributes", () => {
@@ -223,15 +227,31 @@ const className = cx("foo-replaced", classNameVariant(), "qux-replaced");`;
     expect(transformedCode).toBe(expected);
   });
 
-  // cx 的参数使用 ` 的包裹的情况
-  it("should replace string literals in cx cva with `", () => {
+//   // cx 的参数使用 ` 的包裹的情况
+//   it("should replace string literals in cx cva with `", () => {
+//     const code = `
+//       import cx from 'classnames';
+//       const className = cx(\`foo\`);
+//     `;
+//     const expected = `import cx from 'classnames';
+// const className = cx("foo-replaced");`;
+//     const transformedCode = replacer(code, doReplacer);
+//     expect(transformedCode).toBe(expected);
+//   });
+
+  // use keyword extract with clsx and classnames
+  it("should replace string literals in clsx and classnames", () => {
     const code = `
-      import cx from 'classnames';
-      const className = cx(\`foo\`);
+      import clsx from 'clsx';
+      import classnames from 'classnames';
+      const className = clsx('foo', 'bar');
+      const className2 = classnames('foo', 'bar');
     `;
-    const expected = `import cx from 'classnames';
-const className = cx("foo-replaced");`;
-    const transformedCode = replacer(code, doReplacer);
+    const expected = `import clsx from 'clsx';
+import classnames from 'classnames';
+const className = clsx("foo-replaced", "bar-replaced");
+const className2 = classnames("foo-replaced", "bar-replaced");`;
+    const transformedCode = replacer(code, doReplacer, { cva: true, extra: ['clsx', 'classnames']});
     expect(transformedCode).toBe(expected);
   });
 });

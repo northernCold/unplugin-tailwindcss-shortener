@@ -1,4 +1,4 @@
-import type { DoReplacer } from "../../types";
+import type { DoReplacer, Options } from "../../types";
 import fg from "fast-glob";
 import path from "path";
 import fs from "fs";
@@ -14,7 +14,7 @@ const cssShortener = new CssShortener();
 const doReplacer: DoReplacer = generateReplacer((className) =>
   cssShortener.shortenClassName(className)
 );
-export function genCSSMap() {
+export function genCSSMap(keyword: Options['keyword']) {
   const files = fg.sync(["**/*.{jsx,tsx,vue,html,ts,js}", "!node_modules"]);
   for (let file of files) {
     try {
@@ -26,19 +26,19 @@ export function genCSSMap() {
           descriptor: { template, script, scriptSetup, styles },
         } = parse(code);
         if (template) {
-          templateReplacer(template.content, doReplacer);
+          templateReplacer(template.content, doReplacer, keyword);
         }
         if (script) {
-          jsReplacer(script.content, doReplacer);
+          jsReplacer(script.content, doReplacer, keyword);
         }
 
         if (scriptSetup) {
-          jsReplacer(scriptSetup.content, doReplacer);
+          jsReplacer(scriptSetup.content, doReplacer, keyword);
         }
       }
 
       if (ext === ".jsx" || ext === ".tsx" || ext === '.ts' || ext === '.js') {
-        jsReplacer(code, doReplacer);
+        jsReplacer(code, doReplacer, keyword);
       }
 
       if (ext === ".html") {

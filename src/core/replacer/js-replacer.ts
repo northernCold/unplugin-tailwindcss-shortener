@@ -1,4 +1,4 @@
-import type { DoReplacer } from "../../types";
+import type { DoReplacer, Options } from "../../types";
 import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { parse } from "@babel/parser";
@@ -11,7 +11,7 @@ const traverse = ((_traverse as any)["default"] ??
   _traverse) as typeof _traverse;
 const generate = ((_generate as any)["default"] ??
   _generate) as typeof _generate;
-function transform(ast: t.Node, doReplacer: DoReplacer) {
+function transform(ast: t.Node, doReplacer: DoReplacer, keyword: Options['keyword']) {
   function replaceStrings(
     node:
       | t.ConditionalExpression
@@ -40,6 +40,23 @@ function transform(ast: t.Node, doReplacer: DoReplacer) {
     }
     return node;
   }
+  function isKeyword(value: string) {
+    if (keyword!.cva && value === 'cx') {
+      return true;
+    }
+
+    if (keyword?.extra) {
+      if (typeof keyword.extra === 'string') {
+        return value === keyword.extra;
+      }
+      if (Array.isArray(keyword.extra)) {
+        return keyword.extra.includes(value);
+      }
+    }
+
+    return false;
+  }
+
   traverse(ast, {
     JSXAttribute(path: NodePath<t.JSXAttribute>) {
       if (
@@ -59,7 +76,7 @@ function transform(ast: t.Node, doReplacer: DoReplacer) {
     CallExpression(path: NodePath<t.CallExpression>) {
       const callee = path.get("callee");
 
-      if (callee.isIdentifier() && callee.node.name === "cx") {
+      if (callee.isIdentifier() && isKeyword(callee.node.name)) {
         const args = path.get("arguments");
         args.forEach((arg) => {
           const replacedStr = replaceStrings(arg.node as t.Expression);
@@ -70,7 +87,7 @@ function transform(ast: t.Node, doReplacer: DoReplacer) {
         });
       }
 
-      if (callee.isIdentifier() && callee.node.name === "cva") {
+      if (callee.isIdentifier() && callee.node.name === "cva" && keyword?.cva) {
         const args = path.get("arguments");
         args.forEach((arg) => {
           if (arg.isStringLiteral()) {
@@ -200,14 +217,18 @@ function transform(ast: t.Node, doReplacer: DoReplacer) {
   });
 }
 
-export default function replacer(code: string, doReplacer: DoReplacer) {
-  const ast = parse(code, {
-    sourceType: "module",
-    plugins: ["jsx", "typescript"],
-  });
-  transform(ast, doReplacer);
-
-  const { code: transformedCode } = generate(ast);
-
-  return transformedCode;
+export default function replacer(code: string, doReplacer: DoReplacer, keyword: Options['keyword']) {
+  try {
+    const ast = parse(code, {
+      sourceType: "module",
+      plugins: ["jsx", "typescript"],
+    });
+    transform(ast, doReplacer, keyword);
+  
+    const { code: transformedCode } = generate(ast);
+  
+    return transformedCode;
+  } catch (error) {
+    console.error(error);  
+  }
 }
