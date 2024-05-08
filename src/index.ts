@@ -12,7 +12,7 @@ import { parse } from "vue/compiler-sfc";
 import { generateReplacer } from "./core/util";
 import replacer from "./core/replacer/html-replacer";
 import { createFilter } from "@rollup/pluginutils";
-import { cleanUrl } from "./core/util";
+import { cleanUrl, normalizeAbsolutePath } from "./core/util";
 
 type UserOptions = {
   /**
@@ -108,7 +108,8 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
       }
     },
     loadInclude(id: string) {
-      if (id === tailwindcssInput) return true;
+      if (normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput))
+        return true;
       if (id.includes("?")) return false;
       return filter(id);
     },
@@ -178,7 +179,9 @@ export const unpluginFactory: UnpluginFactory<UserOptions> = (options = {}) => {
           const transformedCode = jsReplacer(code, doReplacer);
           return transformedCode;
         }
-        if (tailwindcssInput === id) {
+        if (
+          normalizeAbsolutePath(tailwindcssInput) === normalizeAbsolutePath(id)
+        ) {
           if (options.output) {
             generateFile(tailwindTranformedCode, "transform-tailwind.css");
           }
