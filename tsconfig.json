@@ -9,5 +9,5 @@
     "strictNullChecks": true,
     "esModuleInterop": true
   },
-  "exclude": ["dist", "eslint.config.js"]
+  "exclude": ["dist", "eslint.config.js", "examples/**"]
 }
