@@ -13,7 +13,7 @@ import { generateReplacer } from "./core/util";
 import replacer from "./core/replacer/html-replacer";
 import { createFilter } from "@rollup/pluginutils";
 import { cleanUrl, normalizeAbsolutePath } from "./core/util";
-
+import { classNameTracker, selectorTracker } from "./core/tracker";
 
 function generateFile(code: string, filename: string) {
   const filepath = path.resolve(
@@ -38,7 +38,12 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
     (v: string) => tailwindcssMap[v] ?? v
   );
   const filter = createFilter(
-    options.include || [/\.vue$/, /\.[jt]sx?$/, /tailwind.css$/, /^twst:css-map$/],
+    options.include || [
+      /\.vue$/,
+      /\.[jt]sx?$/,
+      /tailwind.css$/,
+      /^twst:css-map$/,
+    ],
     options.exclude || [
       /[\\/]node_modules[\\/]/,
       /[\\/]\.git[\\/]/,
@@ -49,7 +54,7 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
     name: "unplugin-tailwindcss-shortener",
     enforce: "pre",
     buildStart() {
-      const cssMap = genCSSMap(options.keyword);
+      cssMap = genCSSMap(options.keyword);
       const tailwindConfig = path.resolve(
         process.cwd(),
         options.tailwindConfig ?? "./tailwind.config.js"
@@ -82,7 +87,7 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
       }
     },
     resolveId(id) {
-      if (id === 'twst:css-map') {
+      if (id === "twst:css-map") {
         return id;
       }
       return null;
@@ -179,7 +184,7 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
           }
           return tailwindTranformedCode;
         }
-        if (id === 'twst:css-map') {
+        if (id === "twst:css-map") {
           return `export default ${JSON.stringify(cssMap, null, 2)};`;
         }
         return null;
@@ -187,6 +192,10 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
         console.error(id);
         console.error(error);
       }
+    },
+    writeBundle() {
+      classNameTracker.print();
+      selectorTracker.print();
     },
     vite: {
       apply: options.apply,

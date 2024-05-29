@@ -1,4 +1,5 @@
-import { isAbsolute, normalize } from 'path'
+import { isAbsolute, normalize } from "path";
+import { classNameTracker } from "./tracker";
 
 /**
  * Normalizes a given path when it's absolute. Normalizing means returning a new path by converting
@@ -11,19 +12,20 @@ import { isAbsolute, normalize } from 'path'
  * @returns a new normalized path.
  */
 export function normalizeAbsolutePath(path: string) {
-  if (isAbsolute(path))
-    return normalize(path)
-  else
-    return path
+  if (isAbsolute(path)) return normalize(path);
+  else return path;
 }
 
 export const generateReplacer =
   (callback: (className: string) => unknown) => (classNames: string) => {
-    return classNames
+    const result = classNames
       .split(" ")
       .filter((className) => className)
       .map((className) => callback(className))
       .join(" ");
+
+    classNameTracker.add(classNames, result);
+    return result;
   };
 
 const postfixRE = /[?#].*$/;

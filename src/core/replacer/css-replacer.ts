@@ -1,6 +1,7 @@
 import type { CSSMap } from "../../types";
 import postcss from "postcss";
 import selectorParser from "postcss-selector-parser";
+import { selectorTracker } from "../tracker";
 
 export default function replacer(code: string, cssMap: CSSMap): [string, Set<string>] {
   const usedSet: Set<string> = new Set();
@@ -10,6 +11,7 @@ export default function replacer(code: string, cssMap: CSSMap): [string, Set<str
     selectors.walkClasses((node) => {
       if (cssMap[node.value]) {
         usedSet.add(node.value);
+        selectorTracker.add(node.value, cssMap[node.value]);
         node.value = cssMap[node.value];
       }
     });

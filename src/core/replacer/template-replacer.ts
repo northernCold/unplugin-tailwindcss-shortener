@@ -1,6 +1,10 @@
 import type { DoReplacer, Options } from '../../types';
 import jsReplacer from './js-replacer';
 
+// 不适用 html parser 的原因
+// 无法处理自定义组件 自闭合 =》 <div><p/>123</div> =>
+// vue 本身的 generate 是生成编译后的代码
+
 // (\s|^) 是防止 :rule-class="RuleClassValueEnum.ABNORMAL_OPERATION"
 const staticClassNameRegExp = /(?<=\s|^)class\s*=\s*"([^"]*)"/gm;
 const dynamicClassNameRegExp = /(?<=:)class\s*=\s*"([^"]*)"/gm;
