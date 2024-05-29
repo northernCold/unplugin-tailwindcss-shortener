@@ -93,7 +93,7 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
       return null;
     },
     loadInclude(id: string) {
-      if (normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput))
+      if (tailwindcssInput && normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput))
         return true;
       if (id.includes("?")) return false;
       return filter(id);
