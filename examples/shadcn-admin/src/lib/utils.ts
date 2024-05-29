@@ -1,13 +1,13 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import cssMap from 'twst:css-map'
+
+const cssMap = import.meta.env.TWST_CSS_MAP ?? {};
 console.log(cssMap);
 const shortToOriginMap = new Map<string, string>(Object.entries(cssMap))
 const originToShortMap = new Map<string, string>(
   Object.entries(cssMap).map(([k, v]) => [v, k])
 )
 
-console.log(shortToOriginMap, originToShortMap)
 export function cn(...inputs: ClassValue[]) {
   const classnames = clsx(inputs)
   const before = classnames

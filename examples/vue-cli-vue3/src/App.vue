@@ -9,6 +9,9 @@ import HelloWorld3 from './components/HelloWorld3.vue';
   <HelloWorld2 msg="two" />
   <HelloWorld3 msg="three" />
 </template>
+<script>
+console.log(process.env)
+</script>
 
 <style>
 #app {
