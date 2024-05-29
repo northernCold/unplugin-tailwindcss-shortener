@@ -1,9 +1,11 @@
 import type { UnpluginFactory } from "unplugin";
+import type { UserConfig } from 'vite';
 import type { Options, DoReplacer } from "./types";
 import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
 import { createUnplugin } from "unplugin";
+import webpack from "webpack";
 import { genCSSMap } from "./core/css-map/vue";
 import cssReplacer from "./core/replacer/css-replacer";
 import templateReplacer from "./core/replacer/template-replacer";
@@ -50,11 +52,12 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
       /[\\/]\.nuxt[\\/]/,
     ]
   );
+
+  cssMap = genCSSMap(options.keyword);
   return {
     name: "unplugin-tailwindcss-shortener",
     enforce: "pre",
     buildStart() {
-      cssMap = genCSSMap(options.keyword);
       const tailwindConfig = path.resolve(
         process.cwd(),
         options.tailwindConfig ?? "./tailwind.config.js"
@@ -93,7 +96,10 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
       return null;
     },
     loadInclude(id: string) {
-      if (tailwindcssInput && normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput))
+      if (
+        tailwindcssInput &&
+        normalizeAbsolutePath(id) === normalizeAbsolutePath(tailwindcssInput)
+      )
         return true;
       if (id.includes("?")) return false;
       return filter(id);
@@ -199,9 +205,46 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
     },
     vite: {
       apply: options.apply,
+      config: (config: UserConfig) => {
+        return {
+          define: {
+            ...config.define,
+            "import.meta.env.TWST_CSS_MAP": JSON.stringify(cssMap),
+          },
+        };
+      },
       transformIndexHtml(html) {
         return replacer(html, doReplacer);
       },
+    },
+    webpack(compiler) {
+      compiler.hooks.environment.tap("unplugin-tailwindcss-shortener-plugin", () => {
+        const existingDefinePlugin = compiler.options.plugins.find(
+          (plugin) =>
+            plugin instanceof webpack.DefinePlugin &&
+            plugin.definitions["process.env"]
+        );
+
+        const newVariables = {
+          "process.env": {
+            TWST_CSS_MAP: JSON.stringify(cssMap),
+          },
+        };
+
+        if (existingDefinePlugin) {
+          (existingDefinePlugin as webpack.DefinePlugin).definitions[
+            "process.env"
+          ] = {
+            ...((existingDefinePlugin as webpack.DefinePlugin).definitions[
+              "process.env"
+            ] as Record<string, string>),
+            ...newVariables["process.env"],
+          };
+        } else {
+          const definePlugin = new webpack.DefinePlugin(newVariables);
+          definePlugin.apply(compiler);
+        }
+      });
     },
   };
 };
