@@ -1,11 +1,11 @@
 import type { UnpluginFactory } from "unplugin";
-import type { UserConfig } from 'vite';
+import type { UserConfig } from "vite";
+import type { DefinePlugin } from "webpack";
 import type { Options, DoReplacer } from "./types";
 import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
 import { createUnplugin } from "unplugin";
-import webpack from "webpack";
 import { genCSSMap } from "./core/css-map/vue";
 import cssReplacer from "./core/replacer/css-replacer";
 import templateReplacer from "./core/replacer/template-replacer";
@@ -218,33 +218,37 @@ export const unpluginFactory: UnpluginFactory<Options> = (options = {}) => {
       },
     },
     webpack(compiler) {
-      compiler.hooks.environment.tap("unplugin-tailwindcss-shortener-plugin", () => {
-        const existingDefinePlugin = compiler.options.plugins.find(
-          (plugin) =>
-            plugin instanceof webpack.DefinePlugin &&
-            plugin.definitions["process.env"]
-        );
+      compiler.hooks.environment.tap(
+        "unplugin-tailwindcss-shortener-plugin",
+        () => {
+          const existingDefinePlugin = compiler.options.plugins.find(
+            (plugin) =>
+              plugin instanceof compiler.webpack.DefinePlugin &&
+              plugin.definitions["process.env"]
+          );
 
-        const newVariables = {
-          "process.env": {
-            TWST_CSS_MAP: JSON.stringify(cssMap),
-          },
-        };
-
-        if (existingDefinePlugin) {
-          (existingDefinePlugin as webpack.DefinePlugin).definitions[
-            "process.env"
-          ] = {
-            ...((existingDefinePlugin as webpack.DefinePlugin).definitions[
-              "process.env"
-            ] as Record<string, string>),
-            ...newVariables["process.env"],
+          const newVariables = {
+            "process.env": {
+              TWST_CSS_MAP: JSON.stringify(cssMap),
+            },
           };
-        } else {
-          const definePlugin = new webpack.DefinePlugin(newVariables);
-          definePlugin.apply(compiler);
+
+          if (existingDefinePlugin) {
+            (existingDefinePlugin as DefinePlugin).definitions[
+              "process.env"
+            ] = {
+              ...((existingDefinePlugin as DefinePlugin)
+                .definitions["process.env"] as Record<string, string>),
+              ...newVariables["process.env"],
+            };
+          } else {
+            const definePlugin = new compiler.webpack.DefinePlugin(
+              newVariables
+            );
+            definePlugin.apply(compiler);
+          }
         }
-      });
+      );
     },
   };
 };
